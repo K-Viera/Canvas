@@ -22,16 +22,16 @@ function draw() {
         dx = -dx;
     }else if(paddleY<y&&y<paddleY+paddleHeight)
     {
-        // dx = -dx;
+        if(x+ballRadius>paddleX&&x-ballRadius<paddleX+paddleWidth)
+        {
+            dx = -dx;
+        }
     }
     if(y + dy > a.height-ballRadius || y + dy < ballRadius) {
         dy = -dy;
     }else if(paddleX<x&&x<paddleX+paddleWidth)
     {
-        if(y+ballRadius>paddleY&&y+ballRadius<paddleY+paddleHeight)
-        {
-            dy = -dy;
-        }else if(y-ballRadius<paddleY+paddleHeight&&y-ballRadius>paddleY)
+        if(y+ballRadius>paddleY&&y-ballRadius<paddleY+paddleHeight)
         {
             dy = -dy;
         }
