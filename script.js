@@ -6,12 +6,12 @@ var graph={
         {id:4,name:"cuatro"}
     ],
     links:[
-        {source: 1, target: 3, type: 'Next -->>'},
-        {source: 3, target: 2, type: 'Next -->>'},
-        {source: 4, target: 1, type: 'Next -->>'},
-        {source: 1, target: 2, type: 'Next -->>'},
-        {source: 2, target: 3, type: 'Next -->>'},
-        {source: 3, target: 1, type: 'Next -->>'},
+        {source: 1, target: 3,type:"linea"},
+        {source: 3, target: 2,type:"linea"},
+        {source: 4, target: 1,type:"linea"},
+        {source: 1, target: 2,type:"linea"},
+        {source: 2, target: 3,type:"linea"},
+        {source: 3, target: 1,type:"linea"},
     ]
 };
 
@@ -68,11 +68,20 @@ var simulation = d3.forceSimulation(graph.nodes)
 .force("center",d3.forceCenter(width/2,height/2))
 .on("tick",tick);
 
+var linkLabels = svg.selectAll(".link-label")
+    .data(graph.links)
+    .enter().append('svg:text')
+    .attr("class", "link-label")
+    .text(d=>d.type);
+
 function tick() {
     link.attr("x1", function(d) { return d.source.x; })
     .attr("y1", function(d) { return d.source.y; })
     .attr("x2", function(d) { return d.target.x; })
     .attr("y2", function(d) { return d.target.y; });
+
+    linkLabels.attr("x", d => ((d.source.x + d.target.x) / 2))
+        .attr("y", d => ((d.source.y + d.target.y) / 2));
 
     node.attr("transform", d => `translate(${d.x},${d.y})`);
 };

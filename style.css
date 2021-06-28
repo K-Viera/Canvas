@@ -1,9 +1,15 @@
 .node {
-    stroke: rgb(248, 245, 245);
+    stroke: rgb(241, 241, 241);
     stroke-width: 1px;
 }
 
 .link {
+    stroke: #999;
+    stroke-width: 1.1px;
+    stroke-opacity: .7;
+}
+
+.link-label{
     stroke: #999;
     stroke-width: 1.1px;
     stroke-opacity: .7;
