@@ -15,8 +15,11 @@ var graph={
 var width=400;
 var height=400;
 
-var simulation = d3.forceSimulation()
-.force("x",d3.forceX(width/2))
+var simulation = d3.forceSimulation(graph.nodes)
+.force("link",d3.forceLink(graph.links)
+    .id(function(d){return d.name;}))
+.force("charge",d3.forceManyBody().strength(-200))
+.force("center",d3.forceCenter(width/2,height/2))
 .on("tick",tick);
 
 var svg = d3.select("#graphID").append("svg")
