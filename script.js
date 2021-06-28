@@ -12,13 +12,14 @@ var graph={
         {source:"cuatro", target:"dos"}
     ]
 };
+
 var width=400;
 var height=400;
 
 var simulation = d3.forceSimulation(graph.nodes)
 .force("link",d3.forceLink(graph.links)
     .id(function(d){return d.name;}))
-.force("charge",d3.forceManyBody().strength(-200))
+.force("charge",d3.forceManyBody().strength(-10))
 .force("center",d3.forceCenter(width/2,height/2))
 .on("tick",tick);
 
@@ -35,7 +36,11 @@ var node = svg.selectAll(".node")
     .data(graph.nodes)
     .enter().append("svg:circle")
     .attr("class", "node")
-    .attr("r", 10);
+    .attr("r", 10)
+    .call(d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended));
 
 function tick() {
     link.attr("x1", function(d) { return d.source.x; })
@@ -45,4 +50,22 @@ function tick() {
 
     node.attr("cx", function(d) { return d.x; })
     .attr("cy", function(d) { return d.y; });
- };
+};
+
+function dragstarted(d) {
+    d3.event.sourceEvent.stopPropagation();
+    if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+}
+
+function dragged(d) {
+    d.fx = d3.event.x;
+    d.fy = d3.event.y;
+}
+
+function dragended(d) {
+    if (!d3.event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+}
