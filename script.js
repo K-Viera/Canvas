@@ -34,13 +34,25 @@ var link = svg.selectAll(".link")
 
 var node = svg.selectAll(".node")
     .data(graph.nodes)
-    .enter().append("svg:circle")
+    .enter().append("g")
     .attr("class", "node")
     .attr("r", 10)
     .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
-        .on("end", dragended));
+.on("end", dragended));
+
+node.append("circle")
+    .attr("r", d=> 17)//+ d.runtime/20 )
+    .style("stroke", "grey")
+    .style("stroke-opacity",0.3)
+node.append("title")
+.text("hola");
+
+node.append("text")
+    .attr("dy", 4)
+    .attr("dx", -15)
+    .text(d => d.name);
 
 function tick() {
     link.attr("x1", function(d) { return d.source.x; })
