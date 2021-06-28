@@ -12,57 +12,34 @@ var graph={
         {source:"cuatro", target:"dos"}
     ]
 };
+var width=400;
+var height=400;
 
-var svg = d3.select("#svgID")
-var canvas=d3.select("#canvasID");
-var width=parseFloat(canvas.attr("width"));
-var height=parseFloat(canvas.attr("height"));
-var r=20;
-var ctx=canvas.node().getContext("2d");
+var simulation = d3.forceSimulation()
+.force("x",d3.forceX(width/2))
+.on("tick",tick);
 
-//Simulation fuctions
-var simulation=d3.forceSimulation()
-    .force("x",d3.forceX(width/2))
-    .force("y",d3.forceY(height/2))
-    .force("collide",d3.forceCollide(r+(r/3)))
-    .force("carge",d3.forceManyBody().strength(-r))
-    .force("link",d3.forceLink()
-        .id(function(d){return d.name;}))
-    .on("tick",update);
+var svg = d3.select("#graphID").append("svg")
+    .attr("width", width)
+    .attr("height", height);
 
-simulation.nodes(graph.nodes);
-simulation.force("link").links(graph.links);
+var link = svg.selectAll(".link")
+    .data(graph.links)
+    .enter().append("svg:line")
+    .attr("class", "link");
 
+var node = svg.selectAll(".node")
+    .data(graph.nodes)
+    .enter().append("svg:circle")
+    .attr("class", "node")
+    .attr("r", 10);
 
-// graph.nodes.forEach(function (d){
-//     d.x = Math.random()*width;
-//     d.y = Math.random()*height;
-// });
+function tick() {
+    link.attr("x1", function(d) { return d.source.x; })
+    .attr("y1", function(d) { return d.source.y; })
+    .attr("x2", function(d) { return d.target.x; })
+    .attr("y2", function(d) { return d.target.y; });
 
-//Clean the canvas and draw each node
-function update(){
-    ctx.clearRect(0,0,width,height);
-
-    ctx.beginPath();
-    graph.links.forEach(drawLink);
-    ctx.stroke();
-
-    ctx.beginPath();
-    graph.nodes.forEach(drawNode);
-    ctx.fill();
-}
-
-//Draw the circle node in the canvas
-function drawNode(d){
-    ctx.moveTo(d.x,d.y);
-    ctx.arc(d.x,d.y,r,0,2*Math.PI)
-}
-
-function drawLink(l)
-{
-    ctx.moveTo(l.source.x,l.source.y);
-    ctx.lineWidth=6;
-    ctx.lineTo(l.target.x,l.target.y)
-}
-
-update();
+    node.attr("cx", function(d) { return d.x; })
+    .attr("cy", function(d) { return d.y; });
+ };
