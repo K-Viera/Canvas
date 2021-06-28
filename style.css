@@ -1,6 +1,6 @@
 .node {
-    stroke: #fff;
-    stroke-width: 2px;
+    stroke: rgb(248, 245, 245);
+    stroke-width: 1px;
 }
 
 .link {

@@ -23,6 +23,7 @@ var height=400;
 var svg = d3.select("#graphID").append("svg")
     .attr("width", width)
     .attr("height", height);
+    
 svg.append('defs').append('marker')
     .attr("id",'arrowhead')
     .attr('viewBox','-0 -5 10 10') //the bound of the SVG viewport for the current SVG fragment. defines a coordinate system 10 wide and 10 high starting on (0,-5)
@@ -47,7 +48,6 @@ var node = svg.selectAll(".node")
     .data(graph.nodes)
     .enter().append("g")
     .attr("class", "node")
-    .attr("r", 10)
     .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
@@ -55,8 +55,6 @@ var node = svg.selectAll(".node")
 
 node.append("circle")
     .attr("r", 17)
-    .style("stroke", "grey")
-    .style("stroke-opacity",0.3)
 
 node.append("text")
     .attr("dy", 4)
