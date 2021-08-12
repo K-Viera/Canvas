@@ -1,10 +1,64 @@
-.node {
-    stroke: #fff;
-    stroke-width: 2px;
+svg {
+ background-color: #FFF;
+ cursor: default;
+ -webkit-user-select: none;
+ -moz-user-select: none;
+ -ms-user-select: none;
+ -o-user-select: none;
+ user-select: none;
 }
 
-.link {
-    stroke: #999;
-    stroke-width: 1.1px;
-    stroke-opacity: .7;
+ svg:not(.active):not(.ctrl) {
+     cursor: crosshair;
+ }
+
+path.link {
+ fill: none;
+ stroke: #888;
+ stroke-width: 3px;
+ cursor: default;
 }
+
+svg:not(.active):not(.ctrl) path.link {
+ cursor: pointer;
+}
+
+path.link.selected {
+ stroke-dasharray: 10,2;
+}
+
+path.link.dragline {
+ pointer-events: none;
+}
+
+path.link.hidden {
+ stroke-width: 0;
+}
+
+circle.node {
+ stroke-width: 4px;
+ cursor: pointer;
+ fill: #fff;
+}
+
+.node {
+ stroke-width: 4px;
+ cursor: pointer;
+ fill: #fff;
+}
+
+
+/*circle.node.reflexive {
+stroke: #000 !important;
+stroke-width: 2.5px;
+}*/
+
+text {
+ font: 14px sans-serif;
+ pointer-events: none;
+}
+
+ text.id {
+     text-anchor: middle;
+     font-weight: bold;
+ }

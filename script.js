@@ -1,241 +1,362 @@
 
+ // set up SVG for D3
+ var width = 960,
+ height = 500,
+ colors = function () { return "#FFF"; };//d3.scale.category10();
 
-var width=400;
-var height=400;
-simulation = d3.forceSimulation()
-    .force("link", d3.forceLink() // This force provides links between nodes
-                    .id(d => d.id) // This sets the node id accessor to the specified function. If not specified, will default to the index of a node.
-                    .distance(120)
-     ) 
-    .force("charge", d3.forceManyBody().strength(-700)) // This adds repulsion (if it's negative) between nodes. 
-    .force("center", d3.forceCenter(width / 2, height / 2)); // This force attracts nodes to the center of the svg area
-var svg = d3.select("#graphID").append("svg")
-    .attr("width", width)
-    .attr("height", height);
-    svg.append('defs').append('marker')
-    .attr("id",'arrowhead')
-    .attr('viewBox','-0 -5 10 10') //the bound of the SVG viewport for the current SVG fragment. defines a coordinate system 10 wide and 10 high starting on (0,-5)
-     .attr('refX',23) // x coordinate for the reference point of the marker. If circle is bigger, this need to be bigger.
-     .attr('refY',0)
-     .attr('orient','auto')
-        .attr('markerWidth',13)
-        .attr('markerHeight',13)
-        .attr('xoverflow','visible')
-    .append('svg:path')
-    .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-    .attr('fill', '#999')
-    .style('stroke','none');
-  
-//create some data
-const dataset =  {
-  nodes: [
-        {id: 1, name: 'AGGR', label: 'Aggregation', group: 'Team C', runtime: 20},
-        {id: 2, name: 'ASMT', label: 'Assessment Repository', group: 'Team A', runtime: 60},
-        {id: 3, name: 'CALC', label: 'Final Calc', group: 'Team C', runtime: 30},
-        {id: 4, name: 'DEMO', label: 'Demographic', group: 'Team B', runtime: 40},
-        {id: 5, name: 'ELIG', label: 'Eligibility', group: 'Team B', runtime: 20},
-        {id: 6, name: 'GOAL', label: 'Goal Setting', group: 'Team C', runtime: 60},
-        {id: 7, name: 'GROW', label: 'Growth Model', group: 'Team C', runtime: 60},
-        {id: 8, name: 'LINK', label: 'Linkage', group: 'Team A', runtime: 100},
-        {id: 9, name: 'MOSL', label: 'MOSL', group: 'Team A', runtime: 80},
-        {id: 10, name: 'MOTP', label: 'MOTP', group: 'Team A', runtime: 20},
-        {id: 11, name: 'REPT', label: 'Reporting', group: 'Team E', runtime: 240},
-        {id: 12, name: 'SEDD', label: 'State Data', group: 'Team A', runtime: 30},
-        {id: 13, name: 'SNAP', label: 'Snapshot', group: 'Team A', runtime: 40}
-	], 
-  links: [
-    {source: 1, target: 3, type: 'Next -->>'},
-    {source: 6, target: 1, type: 'Next -->>'},
-    {source: 7, target: 1, type: 'Next -->>'},
-    {source: 9, target: 1, type: 'Next -->>'},
-    {source: 2, target: 4, type: 'Next -->>'},
-    {source: 2, target: 6, type: 'Next -->>'},
-    {source: 2, target: 7, type: 'Next -->>'},
-    {source: 2, target: 8, type: 'Next -->>'},
-    {source: 2, target: 9, type: 'Next -->>'},
-    {source: 10, target: 3, type: 'Next -->>'},
-    {source: 3, target: 11, type: 'Next -->>'},
-    {source: 8, target: 5, type: 'Go to ->>'},
-    {source: 8, target: 11, type: 'Go to ->>'},
-    {source: 6, target: 9, type: 'Go to ->>'},
-    {source: 7, target: 9, type: 'Go to ->>'},
-    {source: 8, target: 9, type: 'Go to ->>'},
-    {source: 9, target: 11, type: 'Go to ->>'},
-    {source: 12, target: 9, type: 'Go to ->>'},
-    {source: 13, target: 11, type: 'Go to ->>'},
-    {source: 13, target: 2, type: 'Go to ->>'},
-    {source: 13, target: 4, type: 'This way>>'},
-    {source: 13, target: 5, type: 'This way>>'},
-    {source: 13, target: 8, type: 'This way>>'},
-    {source: 13, target: 9, type: 'This way>>'},
-    {source: 13, target: 10, type: 'This way>>'},
-    {source: 4, target: 7, type: 'Next -->>'},
-    {source: 4, target: 2, type: 'Next -->>'}
-  ]
-};
+var svg = d3.select('#my_dataviz')
+ .append('svg')
+ .attr('width', width)
+ .attr('height', height);
 
-    console.log("dataset is ...",dataset);
+// set up initial nodes and links
+//  - nodes are known by 'id', not by index in array.
+//  - reflexive edges are indicated on the node (as a bold black circle).
+//  - links are always source < target; edge directions are set by 'left' and 'right'.
+var nodes = [],
+ links = [],
+ select = 0;
 
-// Initialize the links
-const link = svg.selectAll(".links")
-        .data(dataset.links)
-        .enter()
-        .append("line")
-        .attr("class", "links")
-        .attr('marker-end','url(#arrowhead)') //The marker-end attribute defines the arrowhead or polymarker that will be drawn at the final vertex of the given shape.
+// init D3 force layout
+var force = d3.layout.force()
+ .nodes(nodes)
+ .links(links)
+ .size([width, height])
+ .linkDistance(250)
+ .charge(-500)
+ .on('tick', tick)
 
+// define arrow markers for graph links
+svg.append('svg:defs').append('svg:marker')
+ .attr('id', 'end-arrow')
+ .attr('viewBox', '0 -5 10 10')
+ .attr('refX', 6)
+ .attr('markerWidth', 3)
+ .attr('markerHeight', 3)
+ .attr('orient', 'auto')
+ .append('svg:path')
+ .attr('d', 'M0,-5L10,0L0,5')
+ .attr('fill', '#000');
 
-//The <title> element provides an accessible, short-text description of any SVG container element or graphics element.
-//Text in a <title> element is not rendered as part of the graphic, but browsers usually display it as a tooltip.
-link.append("title")
-    .text(d => d.type);
+svg.append('svg:defs').append('svg:marker')
+ .attr('id', 'start-arrow')
+ .attr('viewBox', '0 -5 10 10')
+ .attr('refX', 4)
+ .attr('markerWidth', 3)
+ .attr('markerHeight', 3)
+ .attr('orient', 'auto')
+ .append('svg:path')
+ .attr('d', 'M10,-5L0,0L10,5')
+ .attr('fill', '#000');
 
-const edgepaths = svg.selectAll(".edgepath") //make path go along with the link provide position for link labels
-        .data(dataset.links)
-        .enter()
-        .append('path')
-        .attr('class', 'edgepath')
-        .attr('fill-opacity', 0)
-        .attr('stroke-opacity', 0)
-        .attr('id', function (d, i) {return 'edgepath' + i})
-        .style("pointer-events", "none");
+// line displayed when dragging new nodes
+var drag_line = svg.append('svg:path')
+ .attr('class', 'link dragline hidden')
+ .attr('d', 'M0,0L0,0');
 
-const edgelabels = svg.selectAll(".edgelabel")
-        .data(dataset.links)
-        .enter()
-        .append('text')
-        .style("pointer-events", "none")
-        .attr('class', 'edgelabel')
-        .attr('id', function (d, i) {return 'edgelabel' + i})
-        .attr('font-size', 10)
-        .attr('fill', '#aaa');
+// handles to link and node element groups
+var path = svg.append('svg:g').selectAll('path'),
+ rect = svg.append('svg:g').selectAll('g');
 
-edgelabels.append('textPath') //To render text along the shape of a <path>, enclose the text in a <textPath> element that has an href attribute with a reference to the <path> element.
-    .attr('xlink:href', function (d, i) {return '#edgepath' + i})
-    .style("text-anchor", "middle")
-    .style("pointer-events", "none")
-    .attr("startOffset", "50%")
-    .text(d => d.type);
-  
-// Initialize the nodes
-const node = svg.selectAll(".nodes")
-    .data(dataset.nodes)
-    .enter()
-    .append("g")
-    .attr("class", "nodes")
-    .call(d3.drag() //sets the event listener for the specified typenames and returns the drag behavior.
-        .on("start", dragstarted) //start - after a new pointer becomes active (on mousedown or touchstart).
-        .on("drag", dragged)      //drag - after an active pointer moves (on mousemove or touchmove).
-        //.on("end", dragended)     //end - after an active pointer becomes inactive (on mouseup, touchend or touchcancel).
-    );
+// mouse event vars
+var selected_node = null,
+ selected_link = null,
+ mousedown_link = null,
+ mousedown_node = null,
+ mouseup_node = null;
 
-node.append("circle")
-    .attr("r", d=> 17)//+ d.runtime/20 )
-    .style("stroke", "grey")
-    .style("stroke-opacity",0.3)
-    .style("stroke-width", d => d.runtime/10)
-
-node.append("title")
-    .text(d => d.id + ": " + d.label + " - " + d.group +", runtime:"+ d.runtime+ "min");
-
-node.append("text")
-    .attr("dy", 4)
-    .attr("dx", -15)
-    .text(d => d.name);
-node.append("text")
-    .attr("dy",12)
-    .attr("dx", -8)
-    .text(d=> d.runtime);
-
- //Listen for tick events to render the nodes as they update in your Canvas or SVG.
- simulation
-        .nodes(dataset.nodes)
-        .on("tick", ticked);
-
-simulation.force("link")
-        .links(dataset.links);
-
-
-// This function is run at each iteration of the force algorithm, updating the nodes position (the nodes data array is directly manipulated).
-function ticked() {
-  link.attr("x1", d => d.source.x)
-      .attr("y1", d => d.source.y)
-      .attr("x2", d => d.target.x)
-      .attr("y2", d => d.target.y);
-
-  node.attr("transform", d => `translate(${d.x},${d.y})`);
-
-  edgepaths.attr('d', d => 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y);
+function resetMouseVars() {
+ mousedown_node = null;
+ mouseup_node = null;
+ mousedown_link = null;
 }
 
-//When the drag gesture starts, the targeted node is fixed to the pointer
-//The simulation is temporarily “heated” during interaction by setting the target alpha to a non-zero value.
-function dragstarted(d) {
-      if (!d3.event.active) simulation.alphaTarget(0.3).restart();//sets the current target alpha to the specified number in the range [0,1].
-      d.fy = d.y; //fx - the node’s fixed x-position. Original is null.
-      d.fx = d.x; //fy - the node’s fixed y-position. Original is null.
+// update force layout (called automatically each iteration)
+function tick() {
+ // draw directed edges with proper padding from node centers
+ path.attr('d', function (d) {   
+     var deltaX = d.target.x - d.source.x,
+         deltaY = d.target.y - d.source.y,
+         dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
+         normX = deltaX / dist,
+         normY = deltaY / dist,
+         sourcePadding = d.left ? 17 : 12,
+         targetPadding = d.right ? 17 : 12,
+         sourceX = d.source.x + (sourcePadding * normX),
+         sourceY = d.source.y + (sourcePadding * normY),
+         targetX = d.target.x - (targetPadding * normX),
+         targetY = d.target.y - (targetPadding * normY);
+     return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
+ });
+
+ rect.attr('transform', function (d) {
+     return 'translate(' + d.x + ',' + d.y + ')';
+ });
 }
 
-  //When the drag gesture starts, the targeted node is fixed to the pointer
-  function dragged(d) {
-    d.fx = d3.event.x;
-    d.fy = d3.event.y;
-  }
+// update graph (called when needed)
+function restart() {
+ console.log(nodes);
+ console.log(links);
+ if (links != 0) {
+     // path (link) group
+     path = path.data(links);
 
-//the targeted node is released when the gesture ends
-//   function dragended(d) {
-//     if (!d3.event.active) simulation.alphaTarget(0);
-//     d.fx = null;
-//     d.fy = null;
+     // update existing links
+     path.classed('selected', function (d) { return d === selected_link; })
+         .style('marker-start', function (d) { return d.left ? 'url(#start-arrow)' : ''; })
+         .style('marker-end', function (d) { return d.right ? 'url(#end-arrow)' : ''; });
 
-//     console.log("dataset after dragged is ...",dataset);
-//   }
-  
-  //drawing the legend
-  const legend_g = svg.selectAll(".legend")
-  .data(colorScale.domain())
-  .enter().append("g") 
-  .attr("transform", (d, i) => `translate(${width},${i * 20})`); 
 
-  legend_g.append("circle")
-    .attr("cx", 0)
-    .attr("cy", 0)
-    .attr("r", 5)
-    .attr("fill", colorScale);
+     // add new links
+     path.enter().append('svg:path')
+         .attr('class', 'link')
+         .classed('selected', function (d) { return d === selected_link; })
+         .style('marker-start', function (d) { return d.left ? 'url(#start-arrow)' : ''; })
+         .style('marker-end', function (d) { return d.right ? 'url(#end-arrow)' : ''; })
+         .on('mousedown', function (d) {
+             if (d3.event.ctrlKey) return;
 
-  legend_g.append("text")
-    .attr("x", 10)
-    .attr("y", 5)
-    .text(d => d);
-  
-  //drawing the second legend
-  const legend_g2 = svg.append("g") 
-  //.attr("transform", (d, i) => `translate(${width},${i * 20})`); 
-  .attr("transform", `translate(${width}, 120)`);
-  
-  legend_g2.append("circle")
-    .attr("r", 5)
-    .attr("cx", 0)
-    .attr("cy", 0)
-    .style("stroke", "grey")
-    .style("stroke-opacity",0.3)
-    .style("stroke-width", 15)
-    .style("fill", "black")
-  legend_g2.append("text")
-     .attr("x",15)
-     .attr("y",0)
-     .text("long runtime");
-  
-    legend_g2.append("circle")
-    .attr("r", 5)
-    .attr("cx", 0)
-    .attr("cy", 20)
-    .style("stroke", "grey")
-    .style("stroke-opacity",0.3)
-    .style("stroke-width", 2)
-    .style("fill", "black")
-  legend_g2.append("text")
-     .attr("x",15)
-     .attr("y",20)
-     .text("short runtime");
-  
+             // select link
+             mousedown_link = d;
+             if (mousedown_link === selected_link) selected_link = null;
+             else selected_link = mousedown_link;
+             selected_node = null;
+             restart();
+         });
+
+     // remove old links
+     path.exit().remove();
+ }
+ if (nodes != 0) {
+     // rect (node) group
+     // NB: the function arg is crucial here! nodes are known by id, not by index!
+     rect = rect.data(nodes, function (d) { return d.id; });
+
+     // update existing nodes (reflexive & selected visual states)
+     rect.selectAll('rect')
+         .style('fill', function (d) { return (d === selected_node) ? d3.rgb(colors(d.id)).darker().toString() : colors(d.id); })
+         .classed('reflexive', function (d) { return d.reflexive; });
+
+     // add new nodes
+     var g = rect.enter().append('svg:g');
+
+     g.append('svg:rect')
+         .attr('class', 'node')
+         .attr("width", 120)
+         .attr("height", 50)
+         .style('fill', function (d) { return (d === selected_node) ? d3.rgb(colors(d.id)).brighter().toString() : colors(d.id); })
+         .style('stroke', function (d) { return d3.rgb(colors(d.id)).darker().toString(); })
+         .classed('reflexive', function (d) { return d.reflexive; })
+         .on('mouseover', function (d) {
+             if (!mousedown_node || d === mousedown_node) return;
+             // enlarge target node
+             d3.select(this).attr('transform', 'scale(1.1)');
+         })
+         .on('mouseout', function (d) {
+             if (!mousedown_node || d === mousedown_node) return;
+             // unenlarge target node
+             d3.select(this).attr('transform', '');
+         })
+         .on('mousedown', function (d) {
+             if (d3.event.ctrlKey) return;
+
+             // select node
+             mousedown_node = d;
+             if (mousedown_node === selected_node) selected_node = null;
+             else selected_node = mousedown_node;
+             selected_link = null;
+
+             // reposition drag line
+             drag_line
+                 .style('marker-end', 'url(#end-arrow)')
+                 .classed('hidden', false)
+                 .attr('d', 'M' + mousedown_node.x + ',' + mousedown_node.y + 'L' + mousedown_node.x + ',' + mousedown_node.y);
+             select = d.id;
+             restart();
+         })
+         .on('mouseup', function (d) {
+             if (!mousedown_node) return;
+
+             // needed by FF
+             drag_line
+                 .classed('hidden', true)
+                 .style('marker-end', '');
+
+             // check for drag-to-self
+             mouseup_node = d;
+             if (mouseup_node === mousedown_node) { resetMouseVars(); return; }
+
+             // unenlarge target node
+             d3.select(this).attr('transform', '');
+
+             // add link to graph (update if exists)
+             // NB: links are strictly source < target; arrows separately specified by booleans
+             var source, target, direction;
+             if (mousedown_node.id < mouseup_node.id) {
+                 source = mousedown_node;
+                 target = mouseup_node;
+                 direction = 'right';
+             } else {
+                 source = mouseup_node;
+                 target = mousedown_node;
+                 direction = 'left';
+             }
+
+             var link;
+             link = links.filter(function (l) {
+                 return (l.source === source && l.target === target);
+             })[0];
+
+             if (link) {
+                 link[direction] = true;
+             } else {
+                 link = { source: source, target: target, left: false, right: false };
+                 link[direction] = true;
+                 links.push(link);
+             }
+
+             // select new link
+             selected_link = link;
+             selected_node = null;
+             restart();
+         }
+     );
+     // show node IDs
+     g.append('svg:text')
+         .attr('x', 0)
+         .attr('y', 4)
+         .attr('class', 'id')
+         .text(function (d) { return d.id; });
+
+     // remove old nodes
+     rect.exit().remove();
+
+     // set the graph in motion
+     force.start();
+ }
+}
+
+function addNode() {
+ svg.classed('active', true);
+
+ var node = { id: nodes.length , reflexive: false };
+
+ node.x = 0;
+ node.y = 0;
+ nodes.push(node);
+
+ restart();
+}
+
+function mousemove() {
+ if (!mousedown_node) return;
+
+ // update drag line
+ drag_line.attr('d', 'M' + mousedown_node.x + ',' + mousedown_node.y + 'L' + d3.mouse(this)[0] + ',' + d3.mouse(this)[1]);
+
+}
+
+function mouseup() {
+ if (mousedown_node) {
+     // hide drag line
+     drag_line
+         .classed('hidden', true)
+         .style('marker-end', '');
+ }
+
+ // because :active only works in WebKit?
+ svg.classed('active', false);
+
+ // clear mouse event vars
+ resetMouseVars();
+}
+
+function spliceLinksForNode(node) {
+ var toSplice = links.filter(function (l) {
+     return (l.source === node || l.target === node);
+ });
+ toSplice.map(function (l) {
+     links.splice(links.indexOf(l), 1);
+ });
+}
+
+// only respond once per keydown
+var lastKeyDown = -1;
+
+function keydown() {
+ d3.event.preventDefault();
+
+ if (lastKeyDown !== -1) return;
+ lastKeyDown = d3.event.keyCode;
+
+ // ctrl
+ if (d3.event.keyCode === 17) {
+     rect.call(force.drag);
+     svg.classed('ctrl', true);
+ }
+
+ if (!selected_node && !selected_link) return;
+ switch (d3.event.keyCode) {
+     case 8: // backspace
+     case 46: // delete
+         if (selected_node) {
+             nodes.splice(nodes.indexOf(selected_node), 1);
+             spliceLinksForNode(selected_node);
+         } else if (selected_link) {
+             links.splice(links.indexOf(selected_link), 1);
+         }
+         selected_link = null;
+         selected_node = null;
+         restart();
+         break;
+     case 66: // B
+         if (selected_link) {
+             // set link direction to both left and right
+             selected_link.left = true;
+             selected_link.right = true;
+         }
+         restart();
+         break;
+     case 76: // L
+         if (selected_link) {
+             // set link direction to left only
+             selected_link.left = true;
+             selected_link.right = false;
+         }
+         restart();
+         break;
+     case 82: // R
+         if (selected_node) {
+             // toggle node reflexivity
+             selected_node.reflexive = !selected_node.reflexive;
+         } else if (selected_link) {
+             // set link direction to right only
+             selected_link.left = false;
+             selected_link.right = true;
+         }
+         restart();
+         break;
+ }
+}
+
+function keyup() {
+ lastKeyDown = -1;
+
+ // ctrl
+ if (d3.event.keyCode === 17) {
+     rect
+         .on('mousedown.drag', null)
+         .on('touchstart.drag', null);
+     svg.classed('ctrl', false);
+     svg.classed('ctrl', false);
+ }
+}
+
+// app starts here
+svg.on('mousemove', mousemove)
+ .on('mouseup', mouseup);
+d3.select(window)
+ .on('keydown', keydown)
+ .on('keyup', keyup);
+restart();

@@ -7,10 +7,16 @@
     <title>Document</title>
 </head>
 <body>
-    <div id="graphID"></div>
-    <canvas id="canvasID" width="400" height="400"></canvas>
-    <script src="https://d3js.org/d3.v5.js"></script>
-    <script src="script.js"></script>
+    <div class="container">
+        <button class="btn" onclick="addNode()">Cuadro</button>
+        <button class="btn" onclick="addArray()">Guardar</button>
+        <div id="my_dataviz" width="960" height="500"></div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <link rel="stylesheet" href="style.css">
 </body>
 </html>
