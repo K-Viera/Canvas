@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://d3js.org/d3.v5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-dispatch@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-quadtree@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-timer@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-force@3"></script>
+<style type="text/css">
+.link { stroke: #ccc; }
+.nodetext { pointer-events: none; font: 10px sans-serif; }
+</style>
+</head>
+<body>
+</body>
+</html>
+<script type="text/javascript">
+
+var w = 960,
+    h = 500
+
+var nodes = [],
+    links = [];
+	
+var vis = d3.select("body").append("svg:svg")
+    .attr("width", w)
+    .attr("height", h);
+
+var force = self.force = d3.layout.force()
+	.nodes(nodes)
+	.links(links)
+	.gravity(.05)
+	.distance(100)
+	.charge(-100)
+	.size([w, h]);
+
+force.on("tick", function() {
+	var node = vis.selectAll("g.node")
+		.data(nodes, function(d) { return d.id;} )
+	var link = vis.selectAll("line.link")
+		.data(links, function(d) { return d.source.id + ',' + d.target.id})
+  link.attr("x1", function(d) { return d.source.x; })
+	  .attr("y1", function(d) { return d.source.y; })
+	  .attr("x2", function(d) { return d.target.x; })
+	  .attr("y2", function(d) { return d.target.y; });
+  node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+});
+
+function recalc() {
+    var link = vis.selectAll("line.link")
+                  .data(links, function(l) { return l.source.id + '-' + l.target.id; });
+
+    link.enter().append("svg:line")
+                .attr("class", "link")
+                .attr("x1", function(d) { return d.source.x; })
+                .attr("y1", function(d) { return d.source.y; })
+                .attr("x2", function(d) { return d.target.x; })
+                .attr("y2", function(d) { return d.target.y; });
+
+    link.exit().remove();
+	
+    var node = vis.selectAll("g.node")
+	          .data(nodes, function(d) { return d.dpid;}).call(force.drag);
+	
+	  var nodeEnter = node.enter().append("svg:g")
+		.attr("class", "node")
+		.call(force.drag);
+		
+	nodeEnter.append("svg:image")
+		.attr("class", "circle")
+		.attr("xlink:href", "https://d3nwyuy0nl342s.cloudfront.net/images/icons/public.png")
+		.attr("x", "-8px")
+		.attr("y", "-8px")
+		.attr("width", "16px")
+		.attr("height", "16px");
+
+	nodeEnter.append("svg:text")
+		.attr("class", "nodetext")
+		.attr("dx", 12)
+		.attr("dy", ".35em")
+		.text(function(d) { return d.id });
+
+	node.exit().remove();
+		
+	force.start();
+
+}
+
+
+/* Scenario */
+
+/* step 1: add three nodes and three links */
+function step1() {
+	var nA = {id: 'aaa'};
+	var nB = {id: 'bbb'};
+	var nC = {id: 'ccc'};
+	nodes.push(nA);
+	nodes.push(nB);
+	nodes.push(nC);
+	
+	var lAB = {source: nA, target: nB};
+	var lAC = {source: nA, target: nC};
+	var lBC = {source: nB, target: nC};
+	links.push(lAB );
+	links.push(lAC);
+	links.push(lBC);
+
+	recalc();
+}
+
+/* step 2: node B disappears with links */
+function step2() {
+	nodes = nodes.filter(function(n) { return n.id !== 'bbb'; });
+	links = links.filter(function(l) { return (l.source.id !== 'bbb' && l.target.id !== 'bbb'); });
+
+	recalc();
+}
+
+/* step 3: node B reappears with links */
+function step3() {
+	var nB = {id: 'bbb'};
+	
+	nodes.push(nB);
+	
+	/* find exiting nodes for links */
+	var nA = nodes.filter(function(n) { return n.id === 'aaa'; })[0];
+	var nC = nodes.filter(function(n) { return n.id === 'ccc'; })[0];
+	
+	var lAB = {source: nA, target: nB};
+	var lBC = {source: nB, target: nC};
+	links.push(lAB);
+	links.push(lBC);
+	
+	recalc();
+}
+
+window.setTimeout(step1, 2000);
+window.setTimeout(step2, 4000);
+window.setTimeout(step3, 6000);
+
+force.start();
+recalc();
+
+</script>
+</body>
+</html>
