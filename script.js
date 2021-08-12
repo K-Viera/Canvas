@@ -97,11 +97,15 @@ function tick() {
     //   sourceY = d.source.y + sourcePadding * normY,
     //   targetX = d.target.x - targetPadding * normX,
     //   targetY = d.target.y - targetPadding * normY;
-    var sourceX = d.source.x,
-      sourceY = d.source.y,
-      targetX = d.target.x,
-      targetY = d.target.y;
-    return "M" + sourceX + "," + sourceY + "L" + targetX + "," + targetY;
+    // var sourceX = d.source.x,
+    //   sourceY = d.source.y,
+    //   targetX = d.target.x,
+    //   targetY = d.target.y;
+    // return "M" + sourceX + "," + sourceY + "L" + targetX + "," + targetY;
+    return "M" + d.source.x + "," + d.source.y + " C " +
+    d.source.x + "," + (d.source.y + d.target.y) / 2 + " " +
+    d.target.x + "," + (d.source.y + d.target.y) / 2 + " " +
+    d.target.x + "," + d.target.y;
   });
   rect.attr("transform", function (d) {
     return "translate(" + d.x + "," + d.y + ")";
@@ -242,7 +246,6 @@ function restart() {
           target = mousedown_node;
           direction = "left";
         }
-        console.log("248 S:",source," T:",target," D:",direction);
         var link;
         link = dataset.links.filter(function (l) {
           return l.source === source && l.target === target;
