@@ -1,41 +1,43 @@
 // set up SVG for D3
+var aa;
+var idNode;
 
 const dataset = {
   nodes: [
-    { id: 1, name: "ASMT", label: "Assessment Repository", group: "Team A", runtime: 60 },
-    { id: 2, name: "CALC", label: "Final Calc", group: "Team C", runtime: 30 },
-    { id: 3, name: "DEMO", label: "Demographic", group: "Team B", runtime: 40 },
-    { id: 4, name: "DEMO", label: "Demographic", group: "Team B", runtime: 40 }
+    { id: 1, name: "ASMT", inicio: 1, fin: 0, dependencia: "in" },
+    { id: 2, name: "CALC", inicio: 0, fin: 0, dependencia: "all" },
+    { id: 3, name: "DEMO", inicio: 0, fin: 0, dependencia: "in" },
+    { id: 4, name: "DEMO", inicio: 0, fin: 1, dependencia: "in" }
   ],
   links: [
     { source: 1, target: 3, left: false, right: true },
     { source: 2, target: 3, left: true, right: false }
   ],
+  menu: [
+    {id: 1, title: "Inicio"},
+    {id: 2, title: "Fin"}
+  ]
 };
 
-var width = 960,
-  height = 500,
+var width = 2000,
+  height = 1500,
   colors = function () {
     return "#FFF";
-  }; //d3.scale.category10();
+  };
+
 var svg = d3
   .select("#my_dataviz")
   .append("svg")
   .attr("width", width)
   .attr("height", height);
-// set up initial nodes and links
-//  - nodes are known by 'id', not by index in array.
-//  - reflexive edges are indicated on the node (as a bold black circle).
-//  - links are always source < target; edge directions are set by 'left' and 'right'.
 
-// init D3 force layout
 var force = d3.layout
   .force()
   .nodes(dataset.nodes)
   .links(dataset.links)
   .size([width, height])
-  .linkDistance(250)
-  .charge(-500)
+  .linkDistance(350)
+  .charge(-1000)
   .on("tick", tick);
 // define arrow markers for graph links
 svg
@@ -77,6 +79,7 @@ var selected_node = null,
   mousedown_link = null,
   mousedown_node = null,
   mouseup_node = null;
+
 function resetMouseVars() {
   mousedown_node = null;
   mouseup_node = null;
@@ -86,26 +89,22 @@ function resetMouseVars() {
 function tick() {
   // draw directed edges with proper padding from node centers
   path.attr("d", function (d) {
-    // var deltaX = d.target.x - d.source.x,
-    //   deltaY = d.target.y - d.source.y,
-    //   dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
-    //   normX = deltaX / dist,
-    //   normY = deltaY / dist,
-    //   sourcePadding = d.left ? 17 : 12,
-    //   targetPadding = d.right ? 17 : 12,
-    //   sourceX = d.source.x + sourcePadding * normX,
-    //   sourceY = d.source.y + sourcePadding * normY,
-    //   targetX = d.target.x - targetPadding * normX,
-    //   targetY = d.target.y - targetPadding * normY;
-    // var sourceX = d.source.x,
-    //   sourceY = d.source.y,
-    //   targetX = d.target.x,
-    //   targetY = d.target.y;
-    // return "M" + sourceX + "," + sourceY + "L" + targetX + "," + targetY;
-    return "M" + d.source.x + "," + d.source.y + " C " +
-    d.source.x + "," + (d.source.y + d.target.y) / 2 + " " +
-    d.target.x + "," + (d.source.y + d.target.y) / 2 + " " +
-    d.target.x + "," + d.target.y;
+    var deltaX = d.target.x - d.source.x,
+      deltaY = d.target.y - d.source.y,
+      dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
+      normX = deltaX / dist,
+      normY = deltaY / dist,
+      sourcePadding = d.left ? 17 : 12,
+      targetPadding = d.right ? 17 : 12,
+      sourceX = d.source.x + sourcePadding * normX,
+      sourceY = d.source.y + sourcePadding * normY,
+      targetX = d.target.x - targetPadding * normX,
+      targetY = d.target.y - targetPadding * normY;
+
+    return "M" + sourceX + "," + sourceY + " C " +
+    sourceX + "," + (sourceY + targetY) / 2 + " " +
+    targetX + "," + (sourceY + targetY) / 2 + " " +
+    targetX + "," + targetY;
   });
   rect.attr("transform", function (d) {
     return "translate(" + d.x + "," + d.y + ")";
@@ -113,6 +112,7 @@ function tick() {
 }
 // update graph (called when needed)
 function restart() {
+  console.log("113", dataset);
   if (dataset.links != 0) {
     // path (link) group
     path = path.data(dataset.links);
@@ -154,8 +154,6 @@ function restart() {
     path.exit().remove();
   }
   if (dataset.nodes != 0) {
-    // rect (node) group
-    // NB: the function arg is crucial here! nodes are known by id, not by index!
     rect = rect.data(dataset.nodes, function (d) {
       return d.id;
     });
@@ -182,10 +180,69 @@ function restart() {
           : colors(d.id);
       })
       .style("stroke", function (d) {
-        return d3.rgb(colors(d.id)).darker().toString();
+        console.log("185 ",d3.rgb);
+        return d.inicio == 1 ? d3.rgb("green") : d.fin == 1 ? d3.rgb("red") : d3.rgb(colors(d.id)).darker().toString();
       })
       .classed("reflexive", function (d) {
         return d.reflexive;
+      })
+      .on('contextmenu', function(d, i) {
+        // create the div element that will hold the context menu
+        d3.selectAll('.context-menu')
+        .data([1])
+        .enter()
+        .append('div')
+        .attr('class', 'context-menu');
+        // close menu
+        d3.select('svg').on('click', function() {
+          d3.select('.context-menu').style('display', 'none');
+        });
+        // this gets executed when a contextmenu event occurs
+        d3.selectAll('.context-menu')
+          .html('')
+          .append('ul')
+          .selectAll('li')
+          .data(dataset.menu)
+          .enter()
+          .append('li')
+          .text(function (d) {
+            return d.title;
+          })
+          .on('click', function(d) {
+              dataset.nodes.map(function (node) { 
+                if (d.id == 1) {
+                  if (node.inicio == 1){
+                    node.inicio = 0;
+                  }
+                  if (node.id == idNode){
+                    node.inicio = 1;
+                    console.log("223 ", idNode);
+                  }
+                }
+                if (d.id == 2) {
+                  if (node.fin == 1){
+                    node.fin = 0;
+                  }
+                  if (node.id == idNode){
+                    node.fin = 1;
+                    console.log("223 ", idNode);
+                  }
+                }
+
+                d3.select('.context-menu').style('display', 'none');
+
+                return node;
+              });
+            });
+        // show the context menu
+        d3.select('.context-menu')
+          .style('left', (d3.event.pageX - 2) + 'px')
+          .style('top', (d3.event.pageY - 2) + 'px')
+          .style('display', 'block');
+          
+          idNode = d3.event.path[1].__data__.id;
+
+          d3.event.preventDefault();
       })
       .on("mouseover", function (d) {
         if (!mousedown_node || d === mousedown_node) return;
@@ -220,6 +277,9 @@ function restart() {
               mousedown_node.y
           );
         select = d.id;
+
+        d3.select('.context-menu').style('display', 'none');
+
         restart();
       })
       .on("mouseup", function (d) {
@@ -257,34 +317,84 @@ function restart() {
           link[direction] = true;
           dataset.links.push(link);
         }
-        console.log("260 ",link);
         // select new link
         selected_link = link;
         selected_node = null;
         restart();
+      })
+      .on("mouseover", function () {
+        
+      })
+      .on("dblclick", function(d) {
+        startEditing(d, this);
       });
-    // show node IDs
-    g.append("svg:text")
+      // show node IDs
+      g.append("svg:text")
       .attr("x", 25)
       .attr("y", 20)
-      .attr("class", "id")
+      .attr("class", "text")
       .text(function (d) {
-        return d.name;
-      });
+        return d.name + " Id:" + d.id;
+      })
+      // show node IDs
+      g.append("svg:circle")
+        .attr("class", "close")
+        .attr("x", 110)
+        .attr("y", -10)
+        .attr("width", 20)
+        .attr("height", 20)
+        .attr("r", 10)
+        .attr("rx", 10)
+        .attr("ry", 10)
+        .html('<i class="fa fa-plus"></i>')
+        .on("dblclick", function removeNode(d,i){
+          d3.select(this.parentNode).remove();
+          console.log("id ",d.id);
+          console.log("nodo", i);
+          dataset.nodes.forEach(e => {
+            console.log("foreach ", e)
+            if(e.id == d.id){
+              console.log("foreach true ", e)
+              dataset.nodes.splice(e, 1);
+            }            
+          });
+          restart();
+        });
+        
     // remove old nodes
     rect.exit().remove();
     // set the graph in motion
     force.start();
   }
 }
+
+function startEditing(d, node) {
+  // create a div covering the node then display the form
+  console.log("388 ", d, node);
+  d3.selectAll('.context-input')
+  .data([1])
+  .enter()
+  .append('div')
+  .append('input')
+  .attr('class', 'context-input')
+  .style('left', (d3.event.pageX - 2) + 'px')
+  .style('top', (d3.event.pageY - 2) + 'px')
+  .style('display', 'block');
+}
+
 function addNode() {
   svg.classed("active", true);
-  var node = { id: dataset.nodes.length, reflexive: false };
+  var idNode = 0;
+  dataset.nodes.forEach(e => {
+    idNode = dataset.nodes.length <= e.id ? e.id + 1 : dataset.nodes.length;
+  });
+  var node = { id: idNode, reflexive: false };
   node.x = 0;
   node.y = 0;
   dataset.nodes.push(node);
   restart();
 }
+
 function mousemove() {
   if (!mousedown_node) return;
   // update drag line
@@ -300,6 +410,7 @@ function mousemove() {
       d3.mouse(this)[1]
   );
 }
+
 function mouseup() {
   if (mousedown_node) {
     // hide drag line
@@ -310,16 +421,9 @@ function mouseup() {
   // clear mouse event vars
   resetMouseVars();
 }
-function spliceLinksForNode(node) {
-  var toSplice = dataset.links.filter(function (l) {
-    return l.source === node || l.target === node;
-  });
-  toSplice.map(function (l) {
-    dataset.links.splice(dataset.links.indexOf(l), 1);
-  });
-}
-// only respond once per keydown
+
 var lastKeyDown = -1;
+
 function keydown() {
   d3.event.preventDefault();
   if (lastKeyDown !== -1) return;
@@ -335,7 +439,7 @@ function keydown() {
     case 46: // delete
       if (selected_node) {
         dataset.nodes.splice(dataset.nodes.indexOf(selected_node), 1);
-        spliceLinksForNode(selected_node);
+        // spliceLinksForNode(selected_node);
       } else if (selected_link) {
         dataset.links.splice(dataset.links.indexOf(selected_link), 1);
       }
@@ -372,6 +476,7 @@ function keydown() {
       break;
   }
 }
+
 function keyup() {
   lastKeyDown = -1;
   // ctrl
@@ -381,7 +486,16 @@ function keyup() {
     svg.classed("ctrl", false);
   }
 }
+
+function closeNode(){
+  console.log("390",this);
+}
 // app starts here
 svg.on("mousemove", mousemove).on("mouseup", mouseup);
 d3.select(window).on("keydown", keydown).on("keyup", keyup);
 restart();
+
+
+function send(){
+
+}

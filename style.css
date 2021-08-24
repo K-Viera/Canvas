@@ -35,11 +35,17 @@ path.link.hidden {
  stroke-width: 0;
 }
 
-circle.node {
+rect.node {
  stroke-width: 4px;
  cursor: pointer;
  fill: #fff;
 }
+
+circle.close {
+    stroke-width: 4px;
+    cursor: pointer;
+    fill: rgb(255, 4, 4);
+   }
 
 .node {
  stroke-width: 4px;
@@ -47,18 +53,62 @@ circle.node {
  fill: #fff;
 }
 
-
-/*circle.node.reflexive {
-stroke: #000 !important;
-stroke-width: 2.5px;
-}*/
+.close{
+    stroke-width: 4px;
+    cursor: pointer;
+    fill: rgb(250, 4, 4);
+}
 
 text {
  font: 14px sans-serif;
  pointer-events: none;
 }
 
- text.id {
+ text.text {
      text-anchor: middle;
      font-weight: bold;
  }
+
+#my_dataviz{
+    background-color: #888;
+}
+
+.context-menu {
+  position: absolute;
+  display: none;
+  background-color: #f2f2f2;
+  border-radius: 4px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  min-width: 150px;
+  border: 1px solid #d4d4d4;
+  z-index: 1200;
+}
+
+.context-menu ul {
+  list-style-type: none;
+  margin: 4px 0px;
+  padding: 0px;
+  cursor: default;
+}
+
+.context-menu ul li {
+  padding: 4px 16px;
+}
+
+.context-menu ul li:hover {
+  background-color: #4677f8;
+  color: #fefefe;
+}
+
+.context-input {
+    position: absolute;
+    display: none;
+    background-color: #f2f2f2;
+    border-radius: 4px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    min-width: 150px;
+    border: 1px solid #d4d4d4;
+    z-index: 1200;
+  }
