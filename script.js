@@ -7,16 +7,16 @@ const dataset = {
     { id: 1, name: "ASMT", inicio: 1, fin: 0, dependencia: "in" },
     { id: 2, name: "CALC", inicio: 0, fin: 0, dependencia: "all" },
     { id: 3, name: "DEMO", inicio: 0, fin: 0, dependencia: "in" },
-    { id: 4, name: "DEMO", inicio: 0, fin: 1, dependencia: "in" }
+    { id: 4, name: "DEMO", inicio: 0, fin: 1, dependencia: "in" },
   ],
   links: [
     { source: 1, target: 3, left: false, right: true },
-    { source: 2, target: 3, left: true, right: false }
+    { source: 2, target: 3, left: true, right: false },
   ],
   menu: [
-    {id: 1, title: "Inicio"},
-    {id: 2, title: "Fin"}
-  ]
+    { id: 1, title: "Inicio" },
+    { id: 2, title: "Fin" },
+  ],
 };
 
 var width = 2000,
@@ -101,10 +101,24 @@ function tick() {
       targetX = d.target.x - targetPadding * normX,
       targetY = d.target.y - targetPadding * normY;
 
-    return "M" + sourceX + "," + sourceY + " C " +
-    sourceX + "," + (sourceY + targetY) / 2 + " " +
-    targetX + "," + (sourceY + targetY) / 2 + " " +
-    targetX + "," + targetY;
+    return (
+      "M" +
+      sourceX +
+      "," +
+      sourceY +
+      " C " +
+      sourceX +
+      "," +
+      (sourceY + targetY) / 2 +
+      " " +
+      targetX +
+      "," +
+      (sourceY + targetY) / 2 +
+      " " +
+      targetX +
+      "," +
+      targetY
+    );
   });
   rect.attr("transform", function (d) {
     return "translate(" + d.x + "," + d.y + ")";
@@ -180,69 +194,73 @@ function restart() {
           : colors(d.id);
       })
       .style("stroke", function (d) {
-        console.log("185 ",d3.rgb);
-        return d.inicio == 1 ? d3.rgb("green") : d.fin == 1 ? d3.rgb("red") : d3.rgb(colors(d.id)).darker().toString();
+        console.log("185 ", d3.rgb);
+        return d.inicio == 1
+          ? d3.rgb("green")
+          : d.fin == 1
+          ? d3.rgb("red")
+          : d3.rgb(colors(d.id)).darker().toString();
       })
       .classed("reflexive", function (d) {
         return d.reflexive;
       })
-      .on('contextmenu', function(d, i) {
+      .on("contextmenu", function (d, i) {
         // create the div element that will hold the context menu
-        d3.selectAll('.context-menu')
-        .data([1])
-        .enter()
-        .append('div')
-        .attr('class', 'context-menu');
+        d3.selectAll(".context-menu")
+          .data([1])
+          .enter()
+          .append("div")
+          .attr("class", "context-menu");
         // close menu
-        d3.select('svg').on('click', function() {
-          d3.select('.context-menu').style('display', 'none');
+        d3.select("svg").on("click", function () {
+          d3.select(".context-menu").style("display", "none");
         });
         // this gets executed when a contextmenu event occurs
-        d3.selectAll('.context-menu')
-          .html('')
-          .append('ul')
-          .selectAll('li')
+        d3.selectAll(".context-menu")
+          .html("")
+          .append("ul")
+          .selectAll("li")
           .data(dataset.menu)
           .enter()
-          .append('li')
+          .append("li")
           .text(function (d) {
             return d.title;
           })
-          .on('click', function(d) {
-              dataset.nodes.map(function (node) { 
-                if (d.id == 1) {
-                  if (node.inicio == 1){
-                    node.inicio = 0;
-                  }
-                  if (node.id == idNode){
-                    node.inicio = 1;
-                    console.log("223 ", idNode);
-                  }
+          .on("click", function (d) {
+            dataset.nodes.map(function (node) {
+              if (d.id == 1) {
+                if (node.inicio == 1) {
+                  node.inicio = 0;
                 }
-                if (d.id == 2) {
-                  if (node.fin == 1){
-                    node.fin = 0;
-                  }
-                  if (node.id == idNode){
-                    node.fin = 1;
-                    console.log("223 ", idNode);
-                  }
+                if (node.id == idNode) {
+                  node.inicio = 1;
+                  console.log("223 ", idNode);
                 }
+              }
+              if (d.id == 2) {
+                if (node.fin == 1) {
+                  node.fin = 0;
+                }
+                if (node.id == idNode) {
+                  node.fin = 1;
+                  console.log("223 ", idNode);
+                }
+              }
 
-                d3.select('.context-menu').style('display', 'none');
+              d3.select(".context-menu").style("display", "none");
 
-                return node;
-              });
+              return node;
             });
+          });
         // show the context menu
-        d3.select('.context-menu')
-          .style('left', (d3.event.pageX - 2) + 'px')
-          .style('top', (d3.event.pageY - 2) + 'px')
-          .style('display', 'block');
-          
-          idNode = d3.event.path[1].__data__.id;
+        d3.select(".context-menu")
+          .style("left", d3.event.pageX - 2 + "px")
+          .style("top", d3.event.pageY - 2 + "px")
+          .style("display", "block");
 
-          d3.event.preventDefault();
+        idNode = d3.event.path[1].__data__.id;
+
+        d3.event.preventDefault();
       })
       .on("mouseover", function (d) {
         if (!mousedown_node || d === mousedown_node) return;
@@ -278,7 +296,7 @@ function restart() {
           );
         select = d.id;
 
-        d3.select('.context-menu').style('display', 'none');
+        d3.select(".context-menu").style("display", "none");
 
         restart();
       })
@@ -322,45 +340,43 @@ function restart() {
         selected_node = null;
         restart();
       })
-      .on("mouseover", function () {
-        
-      })
-      .on("dblclick", function(d) {
+      .on("mouseover", function () {})
+      .on("dblclick", function (d) {
         startEditing(d, this);
       });
-      // show node IDs
-      g.append("svg:text")
+    // show node IDs
+    g.append("svg:text")
       .attr("x", 25)
       .attr("y", 20)
       .attr("class", "text")
       .text(function (d) {
         return d.name + " Id:" + d.id;
-      })
-      // show node IDs
-      g.append("svg:circle")
-        .attr("class", "close")
-        .attr("x", 110)
-        .attr("y", -10)
-        .attr("width", 20)
-        .attr("height", 20)
-        .attr("r", 10)
-        .attr("rx", 10)
-        .attr("ry", 10)
-        .html('<i class="fa fa-plus"></i>')
-        .on("dblclick", function removeNode(d,i){
-          d3.select(this.parentNode).remove();
-          console.log("id ",d.id);
-          console.log("nodo", i);
-          dataset.nodes.forEach(e => {
-            console.log("foreach ", e)
-            if(e.id == d.id){
-              console.log("foreach true ", e)
-              dataset.nodes.splice(e, 1);
-            }            
-          });
-          restart();
+      });
+    // show node IDs
+    g.append("svg:circle")
+      .attr("class", "close")
+      .attr("x", 110)
+      .attr("y", -10)
+      .attr("width", 20)
+      .attr("height", 20)
+      .attr("r", 10)
+      .attr("rx", 10)
+      .attr("ry", 10)
+      .html('<i class="fa fa-plus"></i>')
+      .on("dblclick", function removeNode(d, i) {
+        d3.select(this.parentNode).remove();
+        console.log("id ", d.id);
+        console.log("nodo", i);
+        dataset.nodes.forEach((e) => {
+          console.log("foreach ", e);
+          if (e.id == d.id) {
+            console.log("foreach true ", e);
+            dataset.nodes.splice(e, 1);
+          }
         });
-        
+        restart();
+      });
+
     // remove old nodes
     rect.exit().remove();
     // set the graph in motion
@@ -371,21 +387,21 @@ function restart() {
 function startEditing(d, node) {
   // create a div covering the node then display the form
   console.log("388 ", d, node);
-  d3.selectAll('.context-input')
-  .data([1])
-  .enter()
-  .append('div')
-  .append('input')
-  .attr('class', 'context-input')
-  .style('left', (d3.event.pageX - 2) + 'px')
-  .style('top', (d3.event.pageY - 2) + 'px')
-  .style('display', 'block');
+  d3.selectAll(".context-input")
+    .data([1])
+    .enter()
+    .append("div")
+    .append("input")
+    .attr("class", "context-input")
+    .style("left", d3.event.pageX - 2 + "px")
+    .style("top", d3.event.pageY - 2 + "px")
+    .style("display", "block");
 }
 
 function addNode() {
   svg.classed("active", true);
   var idNode = 0;
-  dataset.nodes.forEach(e => {
+  dataset.nodes.forEach((e) => {
     idNode = dataset.nodes.length <= e.id ? e.id + 1 : dataset.nodes.length;
   });
   var node = { id: idNode, reflexive: false };
@@ -487,15 +503,47 @@ function keyup() {
   }
 }
 
-function closeNode(){
-  console.log("390",this);
+function closeNode() {
+  console.log("390", this);
 }
 // app starts here
 svg.on("mousemove", mousemove).on("mouseup", mouseup);
 d3.select(window).on("keydown", keydown).on("keyup", keyup);
 restart();
 
+function Save() {
+  //Data Construction to send data
+  var nodesData = [];
+  var linksData = [];
+  dataset.nodes.forEach((element) => {
+    var dependency = 1;
+    if (element.dependencia != null) {
+      if (element.dependencia == "all") dependency = 0;
+    }
+    var initial = false;
+    if (element.inicio != null) {
+      if ((element.inicio = 1)) initial = true;
+    }
+    var final = false;
+    if (element.final != null) {
+      if ((element.final = 1)) final = true;
+    }
+    nodesData.push({ designerId: element.id, dependency, initial, final });
+  });
+  console.log("nodesData", nodesData);
+  dataset.links.forEach((element) => {
+    if (element.right) {
+      linksData.push({ source: element.source.id, target: element.target.id });
+    }
+    if (element.left) {
+      linksData.push({ source: element.target.id, target: element.source.id });
+    }
+  });
+  let data = { name: "prueba", nodes: nodesData, links: linksData };
+  console.log(data);
+}
 
-function send(){
-
+async function postData(url, data) {
+  let response = await axios.post(url, data);
+  console.log(response.data);
 }
