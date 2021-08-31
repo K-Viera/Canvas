@@ -412,6 +412,7 @@ function addNode() {
 }
 
 function mousemove() {
+  console.log("mouse move");
   if (!mousedown_node) return;
   // update drag line
   drag_line.attr(
