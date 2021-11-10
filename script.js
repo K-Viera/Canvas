@@ -11,11 +11,12 @@ const dataset = {
   ],
   links: [
     { source: 1, target: 3, left: false, right: true },
-    { source: 2, target: 3, left: true, right: false },
+    { source: 2, target: 3, left: false, right: true },
   ],
   menu: [
     { id: 1, title: "Inicio" },
     { id: 2, title: "Fin" },
+    { id: 3, title: "Dependencia Una" },
   ],
 };
 
@@ -106,10 +107,10 @@ function tick() {
       sourceX +
       "," +
       sourceY +
-      " C " +
-      sourceX +
-      "," +
-      (sourceY + targetY) / 2 +
+      // " C " +
+      // sourceX +
+      // "," +
+      // (sourceY + targetY) / 2 +
       " " +
       targetX +
       "," +
@@ -126,7 +127,6 @@ function tick() {
 }
 // update graph (called when needed)
 function restart() {
-  console.log("113", dataset);
   if (dataset.links != 0) {
     // path (link) group
     path = path.data(dataset.links);
@@ -194,7 +194,6 @@ function restart() {
           : colors(d.id);
       })
       .style("stroke", function (d) {
-        console.log("185 ", d3.rgb);
         return d.inicio == 1
           ? d3.rgb("green")
           : d.fin == 1
@@ -220,13 +219,19 @@ function restart() {
           .html("")
           .append("ul")
           .selectAll("li")
-          .data(dataset.menu)
+          .data(function (d) {
+            (dataset.nodes[i].dependencia == "in") ?
+            dataset.menu[2].title = "Dependencia Una" :
+            dataset.menu[2].title = "Dependencia Todas"
+            return dataset.menu;
+          })
           .enter()
           .append("li")
           .text(function (d) {
             return d.title;
           })
           .on("click", function (d) {
+            console.log("clic ", d)
             dataset.nodes.map(function (node) {
               if (d.id == 1) {
                 if (node.inicio == 1) {
@@ -234,7 +239,6 @@ function restart() {
                 }
                 if (node.id == idNode) {
                   node.inicio = 1;
-                  console.log("223 ", idNode);
                 }
               }
               if (d.id == 2) {
@@ -243,13 +247,20 @@ function restart() {
                 }
                 if (node.id == idNode) {
                   node.fin = 1;
-                  console.log("223 ", idNode);
+                }
+              }
+              if (d.id == 3) {
+                if (node.id == idNode) {
+                  node.dependencia == "in" ? 
+                  node.dependencia = "all" : 
+                  node.dependencia = "in";
                 }
               }
 
               d3.select(".context-menu").style("display", "none");
 
               return node;
+              restart();
             });
           });
         // show the context menu
@@ -289,7 +300,7 @@ function restart() {
               mousedown_node.x +
               "," +
               mousedown_node.y +
-              "L" +
+            "L" +
               mousedown_node.x +
               "," +
               mousedown_node.y
@@ -331,7 +342,7 @@ function restart() {
         if (link) {
           link[direction] = true;
         } else {
-          link = { source: source, target: target, left: false, right: false };
+          link = { source: source, target: target, left: false, right: false, dependencia: "in" };
           link[direction] = true;
           dataset.links.push(link);
         }
@@ -363,20 +374,22 @@ function restart() {
       .attr("rx", 10)
       .attr("ry", 10)
       .html('<i class="fa fa-plus"></i>')
-      .on("dblclick", function removeNode(d, i) {
+      .on("click", function removeNode(d, i) {
         d3.select(this.parentNode).remove();
-        console.log("id ", d.id);
-        console.log("nodo", i);
+        d3.select(this.parentNode)
         dataset.nodes.forEach((e) => {
-          console.log("foreach ", e);
           if (e.id == d.id) {
-            console.log("foreach true ", e);
             dataset.nodes.splice(e, 1);
+          }
+        });
+        var cont = 0;
+        dataset.links.forEach((e) => {
+          if (e.source.id == d.id || e.target.id == d.id) {
+            dataset.links.splice(e, 1);
           }
         });
         restart();
       });
-
     // remove old nodes
     rect.exit().remove();
     // set the graph in motion
@@ -386,12 +399,12 @@ function restart() {
 
 function startEditing(d, node) {
   // create a div covering the node then display the form
-  console.log("388 ", d, node);
   d3.selectAll(".context-input")
     .data([1])
     .enter()
     .append("div")
     .append("input")
+    .attr("type", "text")
     .attr("class", "context-input")
     .style("left", d3.event.pageX - 2 + "px")
     .style("top", d3.event.pageY - 2 + "px")
@@ -412,7 +425,6 @@ function addNode() {
 }
 
 function mousemove() {
-  console.log("mouse move");
   if (!mousedown_node) return;
   // update drag line
   drag_line.attr(
@@ -505,46 +517,67 @@ function keyup() {
 }
 
 function closeNode() {
-  console.log("390", this);
+  console.log("close node ", this);
 }
 // app starts here
 svg.on("mousemove", mousemove).on("mouseup", mouseup);
 d3.select(window).on("keydown", keydown).on("keyup", keyup);
 restart();
 
-function Save() {
-  //Data Construction to send data
-  var nodesData = [];
-  var linksData = [];
-  dataset.nodes.forEach((element) => {
-    var dependency = 1;
-    if (element.dependencia != null) {
-      if (element.dependencia == "all") dependency = 0;
-    }
-    var initial = false;
-    if (element.inicio != null) {
-      if ((element.inicio = 1)) initial = true;
-    }
-    var final = false;
-    if (element.final != null) {
-      if ((element.final = 1)) final = true;
-    }
-    nodesData.push({ designerId: element.id, dependency, initial, final });
-  });
-  console.log("nodesData", nodesData);
-  dataset.links.forEach((element) => {
-    if (element.right) {
-      linksData.push({ source: element.source.id, target: element.target.id });
-    }
-    if (element.left) {
-      linksData.push({ source: element.target.id, target: element.source.id });
-    }
-  });
-  let data = { name: "prueba", nodes: nodesData, links: linksData };
-  console.log(data);
+async function Save() {
+  let validate = await validation();
+  if (validate == true) {
+    alert("hay nodos sin relacionar ovincular")
+  }else{
+    //Data Construction to send data
+    var nodesData = [];
+    var linksData = [];
+    dataset.nodes.forEach((element) => {
+      var dependency = 1;
+      if (element.dependencia != null) {
+        if (element.dependencia == "all") dependency = 0;
+      }
+      var initial = false;
+      if (element.inicio != null) {
+        if ((element.inicio = 1)) initial = true;
+      }
+      var final = false;
+      if (element.final != null) {
+        if ((element.final = 1)) final = true;
+      }
+      nodesData.push({ designerId: element.id, dependency, initial, final });
+    });
+    dataset.links.forEach((element) => {
+      if (element.right) {
+        linksData.push({ source: element.source.id, target: element.target.id });
+      }
+      if (element.left) {
+        linksData.push({ source: element.target.id, target: element.source.id });
+      }
+    });
+    let data = { name: "prueba", nodes: nodesData, links: linksData };
+    alert("workflow almacenado")
+  }
 }
+
+async function validation() {
+  let arr1=[]
+  let arr2=[]
+  dataset.nodes.forEach((e) => {
+    dataset.links.forEach((e2 => {
+      if (e.id == e2.target.id || e.id == e2.source.id){
+        arr2.push(true);
+      }else{
+        arr2.push(false);
+      }
+    }));
+    arr1.push(arr2.find(el => el == true) ? true : false);
+    arr2.length=0;
+  });
+  return arr1.includes(false);
+};
+
 
 async function postData(url, data) {
   let response = await axios.post(url, data);
-  console.log(response.data);
 }

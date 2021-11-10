@@ -102,13 +102,20 @@ text {
 }
 
 .context-input {
-    position: absolute;
-    display: none;
-    background-color: #f2f2f2;
-    border-radius: 4px;
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    min-width: 150px;
-    border: 1px solid #d4d4d4;
-    z-index: 1200;
-  }
+  position: absolute;
+  display: none;
+  background-color: #f2f2f2;
+  border-radius: 4px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  min-width: 150px;
+  border: 1px solid #d4d4d4;
+  z-index: 1200;
+}
+
+.inicio {
+  fill: none;
+  stroke: rgb(30, 160, 30);
+  stroke-width: 3px;
+  cursor: default;
+}
